@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useFocusEffect, useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
     ActivityIndicator,
     Dimensions,
@@ -15,16 +15,38 @@ import {
     ToastAndroid,
     TouchableOpacity,
     View,
+    ViewToken,
 } from 'react-native';
 import { useSnippets } from '../context/SnippetContext';
 
-const { width } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
 
 export default function FeedScreen() {
   const router = useRouter();
-  const { snippets, toggleLike, clearSnippets, loading } = useSnippets();
+const { snippets, toggleLike, clearSnippets, loading, deleteSnippetById } = useSnippets();
   const navigation = useNavigation();
   const [refreshing, setRefreshing] = useState(false);
+  const [hasShownEndToast, setHasShownEndToast] = useState(false);
+const [visibleIndex, setVisibleIndex] = useState(0);
+const viewabilityConfig = {
+  viewAreaCoveragePercentThreshold: 50,
+};
+
+const onViewableItemsChanged = React.useRef(
+  ({ viewableItems }: { viewableItems: ViewToken[] }) => {
+    if (viewableItems.length > 0) {
+      setVisibleIndex(viewableItems[0].index ?? 0);
+    }
+  }
+);
+
+
+  const handleEndReached = useCallback(() => {
+    if (!hasShownEndToast && snippets.length > 0) {
+      ToastAndroid.show('No more game snippets to show.', ToastAndroid.SHORT);
+      setHasShownEndToast(true);
+    }
+  }, [hasShownEndToast, snippets.length]);
 
   useFocusEffect(() => {
     navigation.setOptions({
@@ -36,6 +58,7 @@ export default function FeedScreen() {
     setRefreshing(true);
     try {
       ToastAndroid.show('Refreshing snippets...', ToastAndroid.SHORT);
+      // Here you can add your refresh logic if you want to reload snippets
     } catch (error) {
       console.error('Error refreshing:', error);
     } finally {
@@ -52,9 +75,9 @@ export default function FeedScreen() {
     }
   };
 
-  const renderSnippetCard = ({ item, index }: { item: any; index: number }) => (
+  const renderSnippetCard = ({ item }: { item: any }) => (
     <TouchableOpacity
-      style={[styles.snippetCard, { marginTop: index === 0 ? 8 : 0 }]}
+      style={styles.snippetCard}
       onPress={() => router.push({ pathname: '/snippet/SnippetDetailScreen', params: { id: item.id } })}
       activeOpacity={0.95}
     >
@@ -146,10 +169,7 @@ export default function FeedScreen() {
           data={snippets}
           showsVerticalScrollIndicator={false}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={[
-            styles.listContainer,
-            snippets.length === 0 && styles.emptyListContainer,
-          ]}
+          contentContainerStyle={styles.listContainer}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
@@ -160,20 +180,30 @@ export default function FeedScreen() {
           }
           renderItem={renderSnippetCard}
           ListEmptyComponent={EmptyState}
-          ItemSeparatorComponent={() => <View style={styles.separator} />}
+          pagingEnabled
+            onViewableItemsChanged={onViewableItemsChanged.current}
+  viewabilityConfig={viewabilityConfig}
+          snapToInterval={height}
+          snapToAlignment="start"
+          decelerationRate="fast"
+           onEndReached={handleEndReached}
+    onEndReachedThreshold={0.5}
         />
 
-        {/* Floating Add Button (with long press to clear) */}
-      <View style={styles.floatingButtonGroup}>
-  {/* Trash Button */}
-  <TouchableOpacity
+        {/* Floating Add and Trash Buttons */}
+        <View style={styles.floatingButtonGroup}>
+          {/* Trash Button */}
+          <TouchableOpacity
   style={[styles.floatingButton, styles.trashButton]}
   onPress={() => {
     if (snippets.length === 0) {
       ToastAndroid.show('No snippets to clear.', ToastAndroid.SHORT);
     } else {
-      clearSnippets();
-      ToastAndroid.show('All snippets cleared.', ToastAndroid.SHORT);
+      const idToDelete = snippets[visibleIndex]?.id;
+      if (idToDelete) {
+        deleteSnippetById(idToDelete);
+        ToastAndroid.show('Snippet deleted.', ToastAndroid.SHORT);
+      }
     }
   }}
   activeOpacity={0.8}
@@ -182,51 +212,21 @@ export default function FeedScreen() {
 </TouchableOpacity>
 
 
-  {/* Add Button */}
-  <TouchableOpacity
-    style={[styles.floatingButton, styles.addButton]}
-    onPress={() => router.push('/create-snippet')}
-    activeOpacity={0.8}
-  >
-    <Ionicons name="add" size={28} color="#ffffff" />
-  </TouchableOpacity>
-</View>
-
+          {/* Add Button */}
+          <TouchableOpacity
+            style={[styles.floatingButton, styles.addButton]}
+            onPress={() => router.push('/create-snippet')}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="add" size={28} color="#ffffff" />
+          </TouchableOpacity>
+        </View>
       </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-    floatingButtonGroup: {
-  position: 'absolute',
-  right: 24,
-  bottom: 24,
-  alignItems: 'center',
-},
-
-floatingButton: {
-  width: 56,
-  height: 56,
-  borderRadius: 28,
-  justifyContent: 'center',
-  alignItems: 'center',
-  elevation: 8,
-  marginBottom: 12,
-  shadowColor: '#000',
-  shadowOffset: { width: 0, height: 4 },
-  shadowOpacity: 0.3,
-  shadowRadius: 8,
-},
-
-addButton: {
-  backgroundColor: '#2563eb',
-},
-
-trashButton: {
-  backgroundColor: '#ef4444',
-},
-
   safeArea: {
     flex: 1,
     backgroundColor: '#ffffff',
@@ -264,40 +264,18 @@ trashButton: {
     backgroundColor: '#f9fafb',
   },
   listContainer: {
-    paddingHorizontal: 16,
-    paddingBottom: 100,
-  },
-  emptyListContainer: {
-    flexGrow: 1,
-    justifyContent: 'center',
-  },
-  loadingState: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: 60,
-  },
-  loadingText: {
-    marginTop: 16,
-    fontSize: 16,
-    color: '#6b7280',
-    fontWeight: '500',
+    // No extra padding needed to ensure full screen snapping
   },
   snippetCard: {
     backgroundColor: '#ffffff',
-    borderRadius: 16,
+    width: width,
+    height: height,
     padding: 16,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    borderWidth: 1,
-    borderColor: '#f3f4f6',
+    justifyContent: 'flex-start',
   },
   previewBox: {
     width: '100%',
-    height: 120,
+    height: height * 0.6,
     backgroundColor: '#f3f4f6',
     borderRadius: 12,
     marginBottom: 12,
@@ -359,48 +337,65 @@ trashButton: {
   },
   likeText: {
     fontSize: 14,
-    color: '#6b7280',
     fontWeight: '600',
-    marginLeft: 4,
+    marginLeft: 6,
+    color: '#6b7280',
   },
   likeTextActive: {
     color: '#ef4444',
   },
-  separator: {
-    height: 12,
-  },
   emptyState: {
-    alignItems: 'center',
-    paddingVertical: 60,
-    paddingHorizontal: 32,
-  },
-  emptyTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#374151',
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  emptySubtitle: {
-    fontSize: 16,
-    color: '#6b7280',
-    textAlign: 'center',
-    lineHeight: 22,
-  },
-  floatingAddButton: {
-    position: 'absolute',
-    bottom: 24,
-    right: 24,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: '#2563eb',
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 8,
+    padding: 40,
+  },
+  emptyTitle: {
+    fontSize: 22,
+    fontWeight: '600',
+    color: '#9ca3af',
+    marginTop: 12,
+  },
+  emptySubtitle: {
+    fontSize: 14,
+    color: '#d1d5db',
+    marginTop: 4,
+    textAlign: 'center',
+  },
+  loadingState: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 16,
+    color: '#2563eb',
+  },
+  floatingButtonGroup: {
+    position: 'absolute',
+    bottom: 30,
+    right: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
+  floatingButton: {
+    backgroundColor: '#2563eb',
+    padding: 14,
+    borderRadius: 100,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 5,
     shadowColor: '#2563eb',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
-    shadowRadius: 8,
+    shadowRadius: 5,
+  },
+  trashButton: {
+    backgroundColor: '#ef4444',
+  },
+  addButton: {
+    backgroundColor: '#2563eb',
   },
 });

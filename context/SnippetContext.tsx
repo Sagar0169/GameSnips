@@ -15,6 +15,7 @@ type SnippetContextType = {
   addSnippet: (snippet: Omit<Snippet, 'id' | 'likes' | 'isLiked'>) => void;
   toggleLike: (id: string) => void;
   clearSnippets: () => void;
+    deleteSnippetById: (id: string) => void;
   loading:boolean;
 };
 
@@ -61,6 +62,10 @@ const clearSnippets = async () => {
     console.error('Failed to clear snippets:', e);
   }
 };
+const deleteSnippetById = (id: string) => {
+  setSnippets((prev) => prev.filter((snippet) => snippet.id !== id));
+};
+
 
   // Load snippets and liked status from AsyncStorage on mount
  useEffect(() => {
@@ -150,7 +155,7 @@ const clearSnippets = async () => {
   };
 
   return (
-    <SnippetContext.Provider value={{ snippets, addSnippet, toggleLike, clearSnippets,loading: false }}>
+    <SnippetContext.Provider value={{ snippets, addSnippet, toggleLike, clearSnippets,loading: false, deleteSnippetById }}>
       {children}
     </SnippetContext.Provider>
   );

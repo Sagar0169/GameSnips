@@ -27,14 +27,15 @@ A TikTok-style React Native app where users can browse short game-related video 
    git clone https://github.com/Sagar0169/GameSnips.git
    cd GameSnips
 
-Install dependencies:
+2. Install dependencies:
+   ```bash
+   npm install
 
-npm install
+3. Run the app:
+  ```bash
+   npx expo start
 
-Run the app:
-
-npx expo start
-💾 Data Persistence
+### 💾 Data Persistence
 Chosen Option:
 AsyncStorage (via @react-native-async-storage/async-storage)
 
@@ -87,9 +88,7 @@ No backend or real-time update support
 Bonus features like likes/favorites are not yet implemented
 
 📁 Directory Structure (Simplified)
-kotlin
-Copy
-Edit
+  ```bash
 GameSnips/
 ├── assets/
 ├── components/

@@ -84,17 +84,3 @@ No pagination or lazy loading
 Playback resets when navigating away
 
 No backend or real-time update support
-
-Bonus features like likes/favorites are not yet implemented
-
-📁 Directory Structure (Simplified)
-  ```bash
-GameSnips/
-├── assets/
-├── components/
-│   └── VideoPlayer.js
-├── data/
-│   └── snippets.json
-├── App.js
-├── README.md
-└── package.json

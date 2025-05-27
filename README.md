@@ -1,50 +1,101 @@
-# Welcome to your Expo app 👋
+# GameSnips
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+### Author: Sagar
 
-## Get started
+A TikTok-style React Native app where users can browse short game-related video clips.
 
-1. Install dependencies
+---
 
+## 🚀 Project Overview
+
+**GameSnips** is a React Native mobile app built with Expo that mimics the core functionalities of TikTok, tailored for game video snippets. The goal is to demonstrate smooth vertical video playback, a clean UI, and efficient data handling using a local JSON file.
+
+---
+
+## 🛠️ Setup Instructions
+
+### Requirements
+
+- **Node.js** (v18+ recommended)
+- **Expo CLI**
+- **npm** or **yarn**
+
+### Getting Started
+
+1. Clone the repo:
    ```bash
-   npm install
-   ```
+   git clone https://github.com/Sagar0169/GameSnips.git
+   cd GameSnips
 
-2. Start the app
+Install dependencies:
 
-   ```bash
-   npx expo start
-   ```
+npm install
 
-In the output, you'll find options to open the app in a
+Run the app:
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+npx expo start
+💾 Data Persistence
+Chosen Option:
+AsyncStorage (via @react-native-async-storage/async-storage)
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+Reason:
+Simple key-value storage solution
 
-## Get a fresh project
+Lightweight and sufficient for managing snippet data locally
 
-When you're ready, run:
+Works well for short-term persistence without backend complexity
 
-```bash
-npm run reset-project
-```
+✅ Features
+Core Features
+ Vertical feed of video snippets
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+ Smooth swipe navigation
 
-## Learn more
+ Play/pause on tap
 
-To learn more about developing your project with Expo, look at the following resources:
+ Snippet metadata display (title, duration, etc.)
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+ Floating delete button to clear all snippets
 
-## Join the community
+ Toast message upon deletion
 
-Join our community of developers creating universal apps.
+ Handles empty state with friendly UI
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Bonus Features
+ Like/favorite functionality
+
+ Save playback position
+
+ Backend integration for dynamic feed
+
+🧠 Architectural Decisions
+Expo + React Native: Chosen for rapid development and device compatibility
+
+FlatList: For performance-optimized feed rendering
+
+Modular components: Reusable and clean code organization
+
+AsyncStorage: For local persistence without external backend dependencies
+
+⚠️ Known Issues & Future Improvements
+No pagination or lazy loading
+
+Playback resets when navigating away
+
+No backend or real-time update support
+
+Bonus features like likes/favorites are not yet implemented
+
+📁 Directory Structure (Simplified)
+kotlin
+Copy
+Edit
+GameSnips/
+├── assets/
+├── components/
+│   └── VideoPlayer.js
+├── data/
+│   └── snippets.json
+├── App.js
+├── README.md
+└── package.json
